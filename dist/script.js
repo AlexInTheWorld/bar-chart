@@ -1,0 +1,108 @@
+//This is a sample of a bar chart based on the FCC assignment: Visualize Data with a Bar Chart
+
+var width = 800,
+height = 400,
+yMargin = 10,
+xMargin = 80;
+
+var months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+var tooltip = d3.select(".graphContainer").append("div").
+attr("id", "tooltip").
+style("opacity", 0);
+
+var overlay = d3.select('.graphContainer').append('div').
+attr('class', 'overlay').
+style('opacity', 0);
+
+var svgContainer = d3.select('.graphContainer').
+append('svg').
+attr('width', width + 150).
+attr('height', height + 50);
+d3.json('https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/GDP-data.json', function (error, datum) {
+  if (error) {
+    console.log("error");
+  }
+
+  var GDP = [];
+  var dates = [];
+  var parseTime = d3.timeParse("%Y-%m-%d");
+  datum.data.forEach(function (item) {
+    GDP.push(item[1]);
+    dates.push(parseTime(item[0]));
+  });
+  var domainTime = d3.extent(dates);
+  var yScale = d3.scaleLinear().
+  domain([0, d3.max(GDP)]).
+  range([height, 0]);
+  var xScale = d3.scaleTime().
+  domain(domainTime).
+  range([0, width]);
+
+  var xAxis = d3.axisBottom(xScale);
+  svgContainer.append("g").
+  attr("transform", "translate(" + xMargin + "," + 410 + ")").
+  attr("id", "x-axis").
+  call(xAxis);
+  var yAxis = d3.axisLeft(yScale);
+  svgContainer.append("g").
+  attr("transform", "translate(" + xMargin + "," + yMargin + ")").
+  attr("id", "y-axis").
+  call(yAxis);
+  svgContainer.append("text").
+  text("Gross Domestic Product (in billions of US$)").
+  attr("transform", "translate(30, 330)rotate(-90)");
+  svgContainer.append('text').
+  attr('x', width - 280).
+  attr('y', height + 45).
+  text('More Information: http://www.bea.gov/national/pdf/nipaguid.pdf').
+  attr('class', 'info');
+
+  d3.select("svg").selectAll("rect").
+  data(GDP).
+  enter().
+  append("rect").
+  attr("x", function (d, i) {
+    return xScale(dates[i]) + xMargin;
+  }).
+  attr("y", function (d, i) {
+    return yScale(d) + yMargin;
+  }).
+  attr("height", function (d, i) {
+    return height - yScale(d);
+  }).
+  attr("width", width / GDP.length).
+  attr("data-date", function (d, i) {
+    return datum.data[i][0];
+  }).
+  attr("data-gdp", function (d, i) {
+    return datum.data[i][1];
+  }).
+  attr("class", "bar").
+  style("fill", "orange").
+  on("mouseover", function (d, i) {
+    overlay.transition().
+    duration(0).
+    style('height', height - yScale(d) + 'px').
+    style('width', width / GDP.length + 'px').
+    style('opacity', 0.9).
+    style('left', xScale(dates[i]) + xMargin + 'px').
+    style('top', yScale(d) + yMargin + 'px');
+
+    tooltip.transition().
+    duration(200).
+    style('opacity', 0.9);
+    tooltip.html(dates[i].getFullYear() + ' - ' + months[dates[i].getMonth()] + '<br>' + '$' + GDP[i] + ' Billion').
+    attr('data-date', datum.data[i][0]).
+    style('left', xScale(dates[i]) + 30 + 'px').
+    style('top', height - 100 + 'px');
+  }).
+  on('mouseout', function (d) {
+    tooltip.transition().
+    duration(200).
+    style('opacity', 0);
+    overlay.transition().
+    duration(200).
+    style('opacity', 0);
+  });
+});
