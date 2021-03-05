@@ -1,6 +1,6 @@
 # Bar Chart
 
-A bar char example made wit d3 technology for FCC course "Data visualization".
+A bar char example made with d3 technology for FCC course "Data visualization".
 ___
 ***USER STORIES***
 
